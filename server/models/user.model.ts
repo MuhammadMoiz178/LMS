@@ -75,12 +75,16 @@ userSchema.pre<IUser>("save", async function () {
 
 // sign access token
 userSchema.methods.SignAccessToken = function () {
-    return jwt.sign({id:this._id},process.env.ACCESS_TOKEN || '');
+    return jwt.sign({id:this._id},process.env.ACCESS_TOKEN || '',{
+        expiresIn:"5m",
+    });
 }
 
-// sign Refresh token
+// sign Refresh token // Refresh Token will expire after 
 userSchema.methods.SignRefreshToken = function () {
-    return jwt.sign({id:this._id},process.env.REFRESH_TOKEN || '');
+    return jwt.sign({id:this._id},process.env.REFRESH_TOKEN || '',{
+        expiresIn:"3d"
+    });
 }
 
 //compare password
