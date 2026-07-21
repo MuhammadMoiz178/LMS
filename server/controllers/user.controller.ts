@@ -9,6 +9,7 @@ import path from "node:path";
 import sendMail from "../utils/sendMail";
 import { accessTokenOptions, refreshTokenOptions, sendToken } from "../utils/jwt";
 import { redis } from "../utils/redis";
+import { getUserById } from "../services/user.service";
 
 
 //register User
@@ -205,6 +206,18 @@ export const updateAccessToken = catchAsyncError(async (req:Request,res:Response
             status:"success",
             accessToken
         })
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message,400))
+    }
+})
+
+//get user
+export const getUserInfo = catchAsyncError(async (req:Request,res:Response,next:NextFunction) => {
+    try {
+        const userId = req.user?._id;
+        if(userId) {
+            getUserById(userId.toString(),res);
+        } 
     } catch (error:any) {
         return next(new ErrorHandler(error.message,400))
     }
