@@ -200,7 +200,7 @@ export const updateAccessToken = catchAsyncError(async (req:Request,res:Response
         })
 
         req.user = user;
-        
+
         res.cookie("access_token",accessToken,accessTokenOptions)
         res.cookie("refresh_token",refreshToken,refreshTokenOptions)
 
@@ -289,5 +289,51 @@ export const updateUserInfo = catchAsyncError(async (req:Request,res:Response,ne
         })
     } catch (error:any) {
         return next(new ErrorHandler(error.message,400))
+    }
+})
+
+//update user password
+interface IUpdatePassword {
+    oldPassword:string,
+    newPassword:string,
+}
+
+export const updatePassword = catchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { oldPassword, newPassword } = req.body as IUpdatePassword
+
+        if (!oldPassword || !newPassword) {
+            return next(new ErrorHandler("Please enter old and new password", 400))
+        }
+
+        const userId = req.user?._id
+
+        if (!userId) {
+            return next(new ErrorHandler("Please login to access this resource", 401))
+        }
+
+        const user = await userModel.findById(userId.toString()).select("+password")
+
+        if (user?.password === undefined) {
+            return next(new ErrorHandler("Invalid User", 400))
+        }
+        const isPasswordMatch = await user?.comparePassword(oldPassword)
+
+        if (!isPasswordMatch) {
+            return next(new ErrorHandler("Invalid old password", 400))
+        }
+
+        user.password = newPassword
+        await user.save()
+
+        await redis.set(userId.toString(), JSON.stringify(user))
+        res.status(201).json({
+            success: true,
+            user
+        })
+
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 400))
+
     }
 })
