@@ -40,7 +40,7 @@ const userSchema:Schema<IUser> = new mongoose.Schema({
     },
     password:{
         type:String,
-        required:[true,"Please enter your password"],
+        // required:[true,"Please enter your password"], // bcz we can also logged in via social accounts where we will not need password
         minlength:[6,"Password must be atleast 6 characters"],
         select:false,
     },

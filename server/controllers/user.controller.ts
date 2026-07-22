@@ -222,3 +222,28 @@ export const getUserInfo = catchAsyncError(async (req:Request,res:Response,next:
         return next(new ErrorHandler(error.message,400))
     }
 })
+
+interface ISocialAuthBody {
+    email:string,
+    name:string,
+    avatar:string
+}
+
+// social auth
+export const socialAuth = catchAsyncError(async (req:Request,res:Response,next:NextFunction) => {
+    try {
+        const {email,name,avatar} = req.body as ISocialAuthBody
+        const user = await userModel.findOne({email});
+
+        if(!user) {
+            // The user model expects an object: { public_id, url }.
+            const avatarObj = { public_id: "", url: avatar }
+            const newUser = await userModel.create({ email, name, avatar: avatarObj })
+            sendToken(newUser, 201, res)
+        } else {
+            sendToken(user,200,res)
+        }
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message,400))
+    }
+})
