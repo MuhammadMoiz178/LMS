@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import path from "node:path";
 import ejs from 'ejs'
 import sendMail from "../utils/sendMail";
+import notificationModel from "../models/notification.model";
 
 //upload course
 export const uploadCourse = catchAsyncError(async (req:Request,res:Response,next:NextFunction) => {
@@ -155,6 +156,8 @@ export const addQuestion = catchAsyncError(async (req:Request,res:Response,next:
 
         const course = await courseModel.findById(courseId);
 
+        const userId = req.user?._id.toString();
+
         if(!mongoose.Types.ObjectId.isValid(contentId)) {
             return next(new ErrorHandler("Invalid Content id",400))
         }
@@ -174,6 +177,12 @@ export const addQuestion = catchAsyncError(async (req:Request,res:Response,next:
 
         // add this question to our course content
         courseContent.questions.push(newQuestion);
+
+        await notificationModel.create({
+            userId,
+            title:"New Question Received",
+            message:`You have a new question in ${courseContent.title}`
+        })
 
         //save the updated course
         await course?.save();
@@ -203,6 +212,8 @@ export const addAnswer = catchAsyncError(async (req:Request,res:Response,next:Ne
 
         const course = await courseModel.findById(courseId);
 
+        const userId = req.user?._id.toString();
+
          if(!mongoose.Types.ObjectId.isValid(contentId)) {
             return next(new ErrorHandler("Invalid Content id",400))
         }
@@ -231,6 +242,12 @@ export const addAnswer = catchAsyncError(async (req:Request,res:Response,next:Ne
 
         if(req.user?._id === question.user._id) {
             // create a notification
+            await notificationModel.create({
+                userId,
+                title:"New Question Reply Received",
+                message:`You have a new question reply in ${courseContent.title}`
+        })
+
         } else {
             const data = {
                 name: question.user.name,
