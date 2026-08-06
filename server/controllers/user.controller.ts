@@ -9,7 +9,7 @@ import path from "node:path";
 import sendMail from "../utils/sendMail";
 import { accessTokenOptions, refreshTokenOptions, sendToken } from "../utils/jwt";
 import { redis } from "../utils/redis";
-import { getUserById } from "../services/user.service";
+import { getAllUsersService, getUserById } from "../services/user.service";
 import cloudinary from 'cloudinary'
 
 //register User
@@ -26,7 +26,7 @@ export const registerationUser = catchAsyncError(async (req:Request,res:Response
 
         const isEmailExist = await userModel.findOne({email});
         if(isEmailExist) {
-            return next(new ErrorHandler("Email already exist",400))
+            return next(new ErrorHandler("Email already exist",500))
         }
 
         const user:IRegisterationBody = {
@@ -55,11 +55,11 @@ export const registerationUser = catchAsyncError(async (req:Request,res:Response
                 activationToken: activationToken.token
             })
         } catch (error: any) {
-            return next(new ErrorHandler(error.message, 400))
+            return next(new ErrorHandler(error.message, 500))
         }
 
     } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400))
+        return next(new ErrorHandler(error.message, 500))
     }
 })
 
@@ -97,7 +97,7 @@ export const activateUser = catchAsyncError(async(req:Request,res:Response,next:
         ) as {user:IUser;activationCode:string}
 
         if(newUser.activationCode !== activation_code) {
-            return next(new ErrorHandler("Invald Activation Code",400))
+            return next(new ErrorHandler("Invald Activation Code",500))
         }
 
         const {name,email,password} = newUser.user;
@@ -105,7 +105,7 @@ export const activateUser = catchAsyncError(async(req:Request,res:Response,next:
         const existUser = await userModel.findOne({email})
         
         if(existUser) {
-            return next(new ErrorHandler("Email Already exist",400))
+            return next(new ErrorHandler("Email Already exist",500))
         }
 
         const user = await userModel.create({
@@ -119,7 +119,7 @@ export const activateUser = catchAsyncError(async(req:Request,res:Response,next:
         })
 
     } catch (error:any) {
-        return next (new ErrorHandler(error.message,400))
+        return next (new ErrorHandler(error.message,500))
     }
 })
 
@@ -150,7 +150,7 @@ export const loginUser = catchAsyncError(async(req:Request,res:Response,next:Nex
 
         sendToken(user,200,res)
     } catch (error:any) {
-        return next(new ErrorHandler(error.message,400))
+        return next(new ErrorHandler(error.message,500))
     }
 })
 
@@ -168,7 +168,7 @@ export const logoutUser = catchAsyncError(async(req:Request,res:Response,next:Ne
             message:"Logged Out Successfully"
         })
     } catch (error:any) {
-        return next(new ErrorHandler(error.message,400))
+        return next(new ErrorHandler(error.message,500))
     }
 })
 
@@ -209,7 +209,7 @@ export const updateAccessToken = catchAsyncError(async (req:Request,res:Response
             accessToken
         })
     } catch (error:any) {
-        return next(new ErrorHandler(error.message,400))
+        return next(new ErrorHandler(error.message,500))
     }
 })
 
@@ -221,7 +221,7 @@ export const getUserInfo = catchAsyncError(async (req:Request,res:Response,next:
             getUserById(userId.toString(),res);
         } 
     } catch (error:any) {
-        return next(new ErrorHandler(error.message,400))
+        return next(new ErrorHandler(error.message,500))
     }
 })
 
@@ -246,7 +246,7 @@ export const socialAuth = catchAsyncError(async (req:Request,res:Response,next:N
             sendToken(user,200,res)
         }
     } catch (error:any) {
-        return next(new ErrorHandler(error.message,400))
+        return next(new ErrorHandler(error.message,500))
     }
 })
 
@@ -288,7 +288,7 @@ export const updateUserInfo = catchAsyncError(async (req:Request,res:Response,ne
             user,
         })
     } catch (error:any) {
-        return next(new ErrorHandler(error.message,400))
+        return next(new ErrorHandler(error.message,500))
     }
 })
 
@@ -333,7 +333,7 @@ export const updatePassword = catchAsyncError(async (req: Request, res: Response
         })
 
     } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400))
+        return next(new ErrorHandler(error.message, 500))
 
     }
 })
@@ -390,7 +390,16 @@ export const updateProfilePicture = catchAsyncError(async (req: Request, res: Re
             })
         }
     } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400))
+        return next(new ErrorHandler(error.message, 500));
 
+    }
+})
+
+// get all users - only for admin
+export const getAllUsers = catchAsyncError(async (req:Request,res:Response,next:NextFunction) => {
+    try {
+        getAllUsersService(res);
+    } catch (error:any) {
+        return next(new ErrorHandler(error.message, 400));
     }
 })
